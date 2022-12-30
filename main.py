@@ -2,7 +2,6 @@ from discovery import  GetChessnutAirDevices
 import asyncio
 from bleak import BleakClient
 from constants import INITIALIZASION_CODE, WRITECHARACTERISTICS, READCONFIRMATION, READDATA, convertDict, MASKLOW
-import chess
 
 
 oldData = None
@@ -35,14 +34,14 @@ on E8.
         print(8-counterColum, " ", end=" ")
         row = reversed(data[counterColum*4:counterColum*4+4])
         for b in row:
-            #b = data[counterColum*4+counter]
             print (convertDict[b >> 4],  convertDict[b & MASKLOW], end=" ")
         print("")
     print("    a b c d e f g h\n\n")
 
 
 async def leds(data):
-    """The other data sent to the board controls the LEDs. There are two control bytes and 8 data
+    """ Switch on all non empty squares.
+    The other data sent to the board controls the LEDs. There are two control bytes and 8 data
 bytes:
 0x0A 0x08 <R8> <R7> <R6> <R5> <R4> <R3> <R2> <R1>
 where the 8 bytes represent the LEDs with one byte for each row of the board. The first byte
@@ -59,11 +58,12 @@ the controls) would be:
 To turn off all LEDs you just send the 10 bytes with the last 8 bytes all as zero values
     """
     def set_bit(v, index, x):
-        """Set the index:th bit of v to 1 if x is truthy, else to 0, and return the new value."""
+        """Set the index:th bit of v to 1 if x is truthy, 
+        else to 0, and return the new value."""
         mask = 1 << index   # Compute mask, an integer with just bit 'index' set.
         v &= ~mask          # Clear the bit indicated by the mask (if x is False)
         if x:
-            v |= mask         # If x was True, set the bit indicated by the mask.
+            v |= mask       # If x was True, set the bit indicated by the mask.
         return v            # Return the result, we're done.
 
 
@@ -102,10 +102,10 @@ async def run(connect, debug=False):
         CLIENT=client
         print(f"Connected: {client.is_connected}")
         # send initialisation string
-        await client.start_notify(READDATA, notification_handler)
-        await client.write_gatt_char(WRITECHARACTERISTICS, INITIALIZASION_CODE)
-        await asyncio.sleep(100.0)
-        await client.stop_notify(READDATA)
+        await client.start_notify(READDATA, notification_handler) # start the notification handler
+        await client.write_gatt_char(WRITECHARACTERISTICS, INITIALIZASION_CODE) # send initialisation string
+        await asyncio.sleep(100.0) ## wait 100 seconds
+        await client.stop_notify(READDATA) # stop the notification handler
 
 
 connect = GetChessnutAirDevices()
